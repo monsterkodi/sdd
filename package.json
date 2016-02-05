@@ -6,7 +6,7 @@
   "author": "monsterkodi",
   "license": "Unlicense",
   "bin": {
-    "sds": "./bin/sdd"
+    "sdd": "./bin/sdd"
   },
   "repository": {
     "type": "git",

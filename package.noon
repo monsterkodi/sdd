@@ -5,7 +5,7 @@ main            ./js/main.js
 author          monsterkodi
 license         Unlicense
 bin
-                sds   ./bin/sdd
+                sdd   ./bin/sdd
 repository
                 type  git
                 url   git://github.com/monsterkodi/sdd
