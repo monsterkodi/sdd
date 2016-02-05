@@ -1,0 +1,29 @@
+name            sdd
+version         0.0.0
+description     structured data diff
+main            ./js/main.js
+author          monsterkodi
+license         Unlicense
+bin
+                sds   ./bin/sdd
+repository
+                type  git
+                url   git://github.com/monsterkodi/sdd
+preferGlobal    true
+keywords
+                structured
+                data
+                diff
+                commandline tool
+                cli
+scripts
+                test  mocha -R dot --compilers coffee:coffee-script/register
+dependencies
+                colors  ^1.1.2
+                karg    >=1.0.3
+                lodash  ^4.2.1
+                noon    >=1.0.4
+                sds     >=1.6.6
+devDependencies
+                chai    ^3.5.0
+                mocha   ^2.4.5
