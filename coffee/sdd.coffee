@@ -90,7 +90,18 @@ for k in ['a', 'b', 'c']
  0000000    0000000      000   
 ###
 
-out = (s) ->
+out = (r) ->
+
+    for k in ['b2a', 'a2b', 'c2a', 'c2b']
+        delete r[k] if r?[k]?
+    
+    omit =  _.keys(r).filter (k) -> not args[k]
+    f = _.omit r, omit
+
+    f = r if 0 == _.size f
+    
+    s = noon.stringify f, colors: true
+    
     outfile = args.output
     if outfile?
         require('mkpath').sync path.dirname outfile
@@ -120,21 +131,10 @@ out = (s) ->
 
 if args.c? and not args.two
     r = diff.three data.a, data.b, data.c
-    r = r.diff if args.diff
-    r = r.del  if args.del
-    r = r.same if args.same
-
-    for k in ['b2a', 'a2b', 'c2a', 'c2b']
-        delete r[k]
-
-    out noon.stringify r, colors: true
 
 else if args.a? and args.b?
     
     r = diff.two data.a, data.b
-    r = r.diff if args.diff
-    r = r.del  if args.del
-    r = r.same if args.same
     
-    out noon.stringify r, colors: true
+out r
     

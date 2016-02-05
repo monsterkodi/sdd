@@ -8,7 +8,7 @@
  */
 
 (function() {
-  var _, args, colors, data, diff, err, f, fs, i, j, k, l, len, len1, len2, log, noon, out, path, r, ref, ref1, ref2, ref3;
+  var _, args, colors, data, diff, err, f, fs, i, j, k, len, len1, log, noon, out, path, r, ref, ref1, ref2;
 
   _ = require('lodash');
 
@@ -103,8 +103,25 @@
    0000000    0000000      000
    */
 
-  out = function(s) {
-    var error, outfile;
+  out = function(r) {
+    var error, l, len2, omit, outfile, ref3, s;
+    ref3 = ['b2a', 'a2b', 'c2a', 'c2b'];
+    for (l = 0, len2 = ref3.length; l < len2; l++) {
+      k = ref3[l];
+      if ((r != null ? r[k] : void 0) != null) {
+        delete r[k];
+      }
+    }
+    omit = _.keys(r).filter(function(k) {
+      return !args[k];
+    });
+    f = _.omit(r, omit);
+    if (0 === _.size(f)) {
+      f = r;
+    }
+    s = noon.stringify(f, {
+      colors: true
+    });
     outfile = args.output;
     if (outfile != null) {
       require('mkpath').sync(path.dirname(outfile));
@@ -138,37 +155,10 @@
 
   if ((args.c != null) && !args.two) {
     r = diff.three(data.a, data.b, data.c);
-    if (args.diff) {
-      r = r.diff;
-    }
-    if (args.del) {
-      r = r.del;
-    }
-    if (args.same) {
-      r = r.same;
-    }
-    ref3 = ['b2a', 'a2b', 'c2a', 'c2b'];
-    for (l = 0, len2 = ref3.length; l < len2; l++) {
-      k = ref3[l];
-      delete r[k];
-    }
-    out(noon.stringify(r, {
-      colors: true
-    }));
   } else if ((args.a != null) && (args.b != null)) {
     r = diff.two(data.a, data.b);
-    if (args.diff) {
-      r = r.diff;
-    }
-    if (args.del) {
-      r = r.del;
-    }
-    if (args.same) {
-      r = r.same;
-    }
-    out(noon.stringify(r, {
-      colors: true
-    }));
   }
+
+  out(r);
 
 }).call(this);
