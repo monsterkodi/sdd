@@ -23,7 +23,7 @@ dependencies
                 karg    >=1.0.3
                 lodash  ^4.2.1
                 noon    >=1.0.4
-                sds     >=1.6.6
+                sds     >=1.7.1
 devDependencies
                 chai    ^3.5.0
                 mocha   ^2.4.5

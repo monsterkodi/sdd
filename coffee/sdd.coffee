@@ -29,10 +29,11 @@ sdd
     a           . ? first file
     b           . ? second file
     c           . ? common ancestor file
-    diff        . ? show only conflicting values     . = true
-    same        . ? show only unchanged values       . = false
-    new         . ? show only new values             . = false
-    del         . ? show only deleted values         . = false . - D
+    diff        . ? show conflicting values          . = true
+    same        . ? show unchanged values            . = false
+    new         . ? show new values                  . = false
+    del         . ? show deleted values              . = false . - D
+    long        . ? show all values                  . = false
     two         . ? use diff two (c is ignored)      . = false
     pathlist    . ? show as list of path value pairs . = false
     colors      . ? output with ansi colors          . = true . - C
@@ -40,6 +41,8 @@ sdd
     
 version     #{require("#{__dirname}/../package.json").version}
 """
+
+args.diff = args.same = args.new = args.del = true if args.long
 
 ###
 00000000  00000000   00000000    0000000   00000000 
@@ -99,29 +102,20 @@ out = (r) ->
     
     omit = _.keys(r).filter (k) -> not args[k]
     f = _.omit r, omit
-    f = r if 0 == _.size f
     
-    if not args.pathlist
+    o = {}
+    for cn, cl of f
+        if args.pathlist
+            o[cn] = {}
+            for pv in cl
+                o[cn][pv[0].join '.'] = pv.slice 1
+        else
+            o[cn] = sds.objectify cl
     
-        f = sds.objectify f
-    
-    s = noon.stringify f, colors: true
-    
-    outfile = args.output
-    if outfile?
-        require('mkpath').sync path.dirname outfile
-        try
-            require('write-file-atomic') outfile, s, (err) ->
-                if err
-                    log "can't write #{outfile.bold.yellow}".bold.red
-                    log 'err', err
-                else
-                    log "wrote #{outfile.bold.white}".gray
-        catch err
-            log "can't write #{outfile.bold.yellow}".bold.red
-            log 'err', err
+    if args.output? and args.output not in noon.extnames
+        noon.save args.output, o
     else
-        log s
+        log noon.stringify o, colors: args.colors, ext: args.output
 
 ###
 0000000    000  00000000  00000000
@@ -130,9 +124,6 @@ out = (r) ->
 000   000  000  000       000     
 0000000    000  000       000     
 ###
-
-# log args
-# log data
 
 if args.c? and not args.two
     r = diff.three data.a, data.b, data.c
