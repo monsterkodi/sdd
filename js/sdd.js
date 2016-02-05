@@ -8,7 +8,7 @@
  */
 
 (function() {
-  var _, args, colors, data, diff, err, f, fs, i, j, k, len, len1, log, noon, out, path, r, ref, ref1, ref2;
+  var _, args, colors, data, diff, err, f, fs, i, j, k, len, len1, log, noon, objectify, out, path, r, ref, ref1, ref2, sds;
 
   _ = require('lodash');
 
@@ -19,6 +19,8 @@
   colors = require('colors');
 
   noon = require('noon');
+
+  sds = require('sds');
 
   diff = require('./diff');
 
@@ -33,7 +35,7 @@
   000   000  000   000   0000000   0000000
    */
 
-  args = require('karg')("sdd\n    files       . ? the files to diff                . **\n    a           . ? first file\n    b           . ? second file\n    c           . ? common ancestor file\n    diff        . ? show only conflicting values     . = false\n    same        . ? show only unchanged values       . = false\n    new         . ? show only new values             . = false\n    del         . ? show only deleted values         . = false . - D\n    path        . ? show as list of path value pairs . = false\n    output      . ? the file to write or stdout\n    colors      . ? output with ansi colors          . = true . - C\n    \nversion     " + (require(__dirname + "/../package.json").version));
+  args = require('karg')("sdd\n    files       . ? the files to diff                . **\n    a           . ? first file\n    b           . ? second file\n    c           . ? common ancestor file\n    diff        . ? show only conflicting values     . = true\n    same        . ? show only unchanged values       . = false\n    new         . ? show only new values             . = false\n    del         . ? show only deleted values         . = false . - D\n    two         . ? use diff two (c is ignored)      . = false\n    pathlist    . ? show as list of path value pairs . = false\n    colors      . ? output with ansi colors          . = true . - C\n    output      . ? the file to write or stdout\n    \nversion     " + (require(__dirname + "/../package.json").version));
 
 
   /*
@@ -96,6 +98,30 @@
 
 
   /*
+   0000000   0000000          000  00000000   0000000  000000000  000  00000000  000   000
+  000   000  000   000        000  000       000          000     000  000        000 000 
+  000   000  0000000          000  0000000   000          000     000  000000      00000  
+  000   000  000   000  000   000  000       000          000     000  000          000   
+   0000000   0000000     0000000   00000000   0000000     000     000  000          000
+   */
+
+  objectify = function(l) {
+    var cl, cn, len2, m, o, p, r, ref3, va, vb;
+    o = {};
+    for (cn in l) {
+      cl = l[cn];
+      r = {};
+      for (m = 0, len2 = cl.length; m < len2; m++) {
+        ref3 = cl[m], p = ref3[0], va = ref3[1], vb = ref3[2];
+        sds.set(r, p, vb != null ? vb : va);
+      }
+      o[cn] = r;
+    }
+    return o;
+  };
+
+
+  /*
    0000000   000   000  000000000
   000   000  000   000     000   
   000   000  000   000     000   
@@ -104,10 +130,10 @@
    */
 
   out = function(r) {
-    var error, l, len2, omit, outfile, ref3, s;
+    var error, len2, m, omit, outfile, ref3, s;
     ref3 = ['b2a', 'a2b', 'c2a', 'c2b'];
-    for (l = 0, len2 = ref3.length; l < len2; l++) {
-      k = ref3[l];
+    for (m = 0, len2 = ref3.length; m < len2; m++) {
+      k = ref3[m];
       if ((r != null ? r[k] : void 0) != null) {
         delete r[k];
       }
@@ -118,6 +144,9 @@
     f = _.omit(r, omit);
     if (0 === _.size(f)) {
       f = r;
+    }
+    if (!args.pathlist) {
+      f = objectify(f);
     }
     s = noon.stringify(f, {
       colors: true
