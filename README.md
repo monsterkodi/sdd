@@ -35,3 +35,9 @@ sdd.diff.three A, B, C
         
 # happy diffing :-)
 ```
+
+### caveats
+
+- hacked together quickly
+- not performance optimized 
+- get yourself some coffee when using this on large files :-)

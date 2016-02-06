@@ -14,10 +14,78 @@ log      = console.log
 toplevel = sds.toplevel
 sortpath = sds.sortpath
 collect  = sds.collect
+cmppath  = sds.cmppath
 get      = sds.get
+
+profile = require './profile'
 
 class diff
     
+    @minus: (a, b, eql=_.isEqual) ->
+
+        ai = 0
+        bi = 0
+        r  = []
+        while ai < a.length
+            while bi < b.length and cmppath(a[ai][0], b[bi][0]) > 0
+                bi += 1
+            if  bi >= b.length
+                break
+            if not eql a[ai], b[bi]
+                r.push a[ai]
+            ai += 1
+            
+        while ai < a.length
+            r.push a[ai]
+            ai += 1
+        r
+        
+    @union: (a, b) ->
+        
+        ai = 0
+        bi = 0
+        r  = []
+        while ai < a.length
+            
+            while bi < b.length and cmppath(a[ai][0], b[bi][0]) > 0
+                r.push b[bi]
+                bi += 1
+                
+            if bi >= b.length 
+                break
+                
+            if _.isEqual a[ai], b[bi]
+                r.push a[ai]
+                bi += 1
+            else
+                r.push a[ai]
+
+            ai += 1
+        
+        while ai < a.length
+            r.push a[ai]
+            ai += 1
+
+        while bi < b.length
+            r.push b[bi]
+            bi += 1        
+        r 
+        
+    @intersect: (a, b, eql=_.isEqual) ->
+
+        ai = 0
+        bi = 0
+        r  = []
+        while ai < a.length
+            while bi < b.length and cmppath(a[ai][0], b[bi][0]) > 0
+                bi += 1
+            if bi >= b.length
+                break
+            if eql a[ai], b[bi]
+                r.push a[ai]
+            ai += 1
+        r
+        
     ###
     000000000  000   000   0000000 
        000     000 0 000  000   000
@@ -38,22 +106,35 @@ class diff
     ###
     
     @two: (c, a) -> 
-        
+        # profile 'diff.two'
         tc = collect c
         ta = collect a
-        
+        # profile 'sort tc'
+        tc = sortpath tc
+        # profile 'sort ta'        
+        ta = sortpath ta
+        # profile 'minus nac'
         pc0 = (x,y) -> x[0][0] == y[0][0]
-        nac = _.differenceWith   ta, tc, pc0             # new
-        dac = _.differenceWith   tc, ta, pc0             # deleted
-        und = _.unionWith       nac, dac, _.isEqual      # new or deleted
-        sme = _.intersectionWith tc, ta,  _.isEqual      # unchanged
-        dff = _.unionWith        tc, ta,  _.isEqual      # diff = all - new - del - same
-        dff = _.differenceWith  dff, und, sme, tc, _.isEqual
+        nac = @minus ta, tc, pc0             # new
+        # profile 'minus dac'
+        dac = @minus tc, ta, pc0             # deleted
+        # profile 'union und'
+        und = @union nac, dac                # new or deleted
+        # profile 'intersect'
+        sme = @intersect tc, ta              # unchanged
+        # profile 'union dff'
+        dff = @union tc, ta                  # diff = all - new - del - same
 
-        diff: sortpath dff.map    (t) -> [t[0], get(c, t[0]), t[1]] 
-        new:  sortpath toplevel nac
-        same: sortpath toplevel sme
-        del:  sortpath toplevel dac
+        dff = @minus dff, und
+        dff = @minus dff, sme
+        dff = @minus dff, tc
+
+        # profile ''
+
+        diff: dff.map (t) -> [t[0], get(c, t[0]), t[1]]
+        new:  toplevel nac
+        same: toplevel sme
+        del:  toplevel dac
     
     ###
     000000000  000   000  00000000   00000000  00000000

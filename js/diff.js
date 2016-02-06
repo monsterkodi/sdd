@@ -8,7 +8,7 @@
  */
 
 (function() {
-  var _, collect, diff, get, log, noon, sds, sortpath, toplevel;
+  var _, cmppath, collect, diff, get, log, noon, profile, sds, sortpath, toplevel;
 
   _ = require('lodash');
 
@@ -24,10 +24,96 @@
 
   collect = sds.collect;
 
+  cmppath = sds.cmppath;
+
   get = sds.get;
+
+  profile = require('./profile');
 
   diff = (function() {
     function diff() {}
+
+    diff.minus = function(a, b, eql) {
+      var ai, bi, r;
+      if (eql == null) {
+        eql = _.isEqual;
+      }
+      ai = 0;
+      bi = 0;
+      r = [];
+      while (ai < a.length) {
+        while (bi < b.length && cmppath(a[ai][0], b[bi][0]) > 0) {
+          bi += 1;
+        }
+        if (bi >= b.length) {
+          break;
+        }
+        if (!eql(a[ai], b[bi])) {
+          r.push(a[ai]);
+        }
+        ai += 1;
+      }
+      while (ai < a.length) {
+        r.push(a[ai]);
+        ai += 1;
+      }
+      return r;
+    };
+
+    diff.union = function(a, b) {
+      var ai, bi, r;
+      ai = 0;
+      bi = 0;
+      r = [];
+      while (ai < a.length) {
+        while (bi < b.length && cmppath(a[ai][0], b[bi][0]) > 0) {
+          r.push(b[bi]);
+          bi += 1;
+        }
+        if (bi >= b.length) {
+          break;
+        }
+        if (_.isEqual(a[ai], b[bi])) {
+          r.push(a[ai]);
+          bi += 1;
+        } else {
+          r.push(a[ai]);
+        }
+        ai += 1;
+      }
+      while (ai < a.length) {
+        r.push(a[ai]);
+        ai += 1;
+      }
+      while (bi < b.length) {
+        r.push(b[bi]);
+        bi += 1;
+      }
+      return r;
+    };
+
+    diff.intersect = function(a, b, eql) {
+      var ai, bi, r;
+      if (eql == null) {
+        eql = _.isEqual;
+      }
+      ai = 0;
+      bi = 0;
+      r = [];
+      while (ai < a.length) {
+        while (bi < b.length && cmppath(a[ai][0], b[bi][0]) > 0) {
+          bi += 1;
+        }
+        if (bi >= b.length) {
+          break;
+        }
+        if (eql(a[ai], b[bi])) {
+          r.push(a[ai]);
+        }
+        ai += 1;
+      }
+      return r;
+    };
 
 
     /*
@@ -55,22 +141,26 @@
       var dac, dff, nac, pc0, sme, ta, tc, und;
       tc = collect(c);
       ta = collect(a);
+      tc = sortpath(tc);
+      ta = sortpath(ta);
       pc0 = function(x, y) {
         return x[0][0] === y[0][0];
       };
-      nac = _.differenceWith(ta, tc, pc0);
-      dac = _.differenceWith(tc, ta, pc0);
-      und = _.unionWith(nac, dac, _.isEqual);
-      sme = _.intersectionWith(tc, ta, _.isEqual);
-      dff = _.unionWith(tc, ta, _.isEqual);
-      dff = _.differenceWith(dff, und, sme, tc, _.isEqual);
+      nac = this.minus(ta, tc, pc0);
+      dac = this.minus(tc, ta, pc0);
+      und = this.union(nac, dac);
+      sme = this.intersect(tc, ta);
+      dff = this.union(tc, ta);
+      dff = this.minus(dff, und);
+      dff = this.minus(dff, sme);
+      dff = this.minus(dff, tc);
       return {
-        diff: sortpath(dff.map(function(t) {
+        diff: dff.map(function(t) {
           return [t[0], get(c, t[0]), t[1]];
-        })),
-        "new": sortpath(toplevel(nac)),
-        same: sortpath(toplevel(sme)),
-        del: sortpath(toplevel(dac))
+        }),
+        "new": toplevel(nac),
+        same: toplevel(sme),
+        del: toplevel(dac)
       };
     };
 

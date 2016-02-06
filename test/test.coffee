@@ -3,12 +3,13 @@ assert = require 'assert'
 chai   = require 'chai'
 sds    = require 'sds'
 sdd    = require '../'
+
 expect = chai.expect
 chai.should()
 
 describe 'module interface', ->
     
-    it 'should implement diff',             -> _.isFunction(sdd.diff        ).should.be.true
+    it 'should implement diff',       -> _.isFunction(sdd.diff        ).should.be.true
 
 ###
 0000000    000  00000000  00000000
@@ -20,6 +21,25 @@ describe 'module interface', ->
 
 describe 'diff', ->
     
+    it 'should minus', -> 
+        
+        expect sdd.diff.minus [[['a'], 1], [['b'], 2], [['d'], 3]], [[['b'], 2]], (x,y) -> x[0][0] == y[0][0]
+        .to.eql [ [ [ 'a' ], 1 ], [ [ 'd' ], 3 ] ]
+
+        expect sdd.diff.minus [[['m'], 1], [['o'], 2], [['p'], 3]], [[['m'], 2], [['p'], 2], [['q'], 2]], (x,y) -> x[0][0] == y[0][0]
+        .to.eql [ [ [ 'o' ], 2 ] ]
+
+        expect sdd.diff.minus [
+            [['m'], 2]
+            [['o'], 2]
+            [['p'], 2]
+        ],[
+            [['m'], 2] 
+            [['p'], 2] 
+            [['q'], 2]
+        ], (x,y) -> x[0][0] == y[0][0]
+        .to.eql [ [ [ 'o' ], 2 ] ]
+
     it 'should implement diff.two'  , -> _.isFunction(sdd.diff.two  ).should.be.true
     it 'should implement diff.three', -> _.isFunction(sdd.diff.three).should.be.true
 
@@ -94,7 +114,6 @@ describe 'diff', ->
         diff:   [   [ [ 'm' ],     -5, 5              ]
                     [ [ 'p' ], [1, 3], [ 1, 2, 3 ]    ]
                     [ [ 'p'  , 1 ]  ,         3, 2    ] 
-                    [ [ 'p'  , 2 ]  , undefined, 3    ] 
                     [ [ 'r' ],     1, null            ]
                     [ [ 's' ], 'sss', 's!s'           ] ]
         same:   [   [ [ 'q' ], { x: 1, y: 2 }         ]
@@ -108,8 +127,7 @@ describe 'diff', ->
 
     c2b = 
         diff:   [   [ [ 'm' ],     -5, 5            ]
-                    [ [ 'p' ], [ 1, 3 ], [ 1, 3, 2  ] ]
-                    [ [ 'p', 2 ], undefined, 2 ]    ]
+                    [ [ 'p' ], [ 1, 3 ], [ 1, 3, 2 ] ] ]
         same:   [   [ [ 'q' ], { x: 1, y: 2 }       ]
                     [ [ 's' ], 'sss'                ]
                     [ [ 'x' ], 8                    ] ]
@@ -130,7 +148,7 @@ describe 'diff', ->
     
         expect sdd.diff.two c, b
         .to.eql c2b
-
+    
         expect sdd.diff.two a, a
         .to.eql 
             same: dtra.filter (t) -> t[0].length == 1
@@ -158,9 +176,9 @@ describe 'diff', ->
                     [ [ 'y' ], 9                                ] ]
             del:  [ [ [ 'z' ], 7                                ] ]
             
-
+    
     it 'should diff three a a a', -> 
-
+    
         expect sdd.diff.three a, a, a
         .to.eql 
             c2a:  sdd.diff.two a, a
@@ -170,9 +188,9 @@ describe 'diff', ->
             diff: []
             del:  []
             same: sds.sortpath sds.toplevel sds.collect a
-
+    
     it 'should diff three a a b', -> 
-
+    
         expect sdd.diff.three a, b, a
         .to.eql 
             c2a:  sdd.diff.two a, a
@@ -182,5 +200,5 @@ describe 'diff', ->
             diff: []
             del:  a2b.del
             same: sds.sortpath sds.toplevel sds.collect(b)
-
+    
 
