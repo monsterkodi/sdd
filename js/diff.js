@@ -8,7 +8,7 @@
  */
 
 (function() {
-  var _, cmppath, collect, diff, get, log, noon, profile, sds, sortpath, toplevel;
+  var _, cmppath, collect, diff, get, log, noon, sds, sortpath, toplevel;
 
   _ = require('lodash');
 
@@ -27,8 +27,6 @@
   cmppath = sds.cmppath;
 
   get = sds.get;
-
-  profile = require('./profile');
 
   diff = (function() {
     function diff() {}
@@ -164,30 +162,28 @@
      * the diff list might contain changes at keypath.length > 1
      */
 
-    diff.two = function(c, a) {
-      var dac, dff, nac, pc0, sme, ta, tc, und;
-      tc = collect(c);
-      ta = collect(a);
-      tc = sortpath(tc);
-      ta = sortpath(ta);
+    diff.two = function(a, b) {
+      var ca, cb, del, dff, nwb, pc0, sme;
+      ca = collect(a);
+      cb = collect(b);
+      sortpath(ca);
+      sortpath(cb);
       pc0 = function(x, y) {
         return x[0][0] === y[0][0];
       };
-      nac = this.minus(ta, tc, pc0);
-      dac = this.minus(tc, ta, pc0);
-      und = this.union(nac, dac);
-      sme = this.intersect(tc, ta);
-      dff = this.union(tc, ta);
-      dff = this.minus(dff, und);
-      dff = this.minus(dff, sme);
-      dff = this.minus(dff, tc);
+      nwb = this.minus(cb, ca, pc0);
+      del = this.minus(ca, cb, pc0);
+      sme = this.intersect(ca, cb);
+      dff = this.minus(cb, sme);
+      dff = this.minus(dff, nwb);
+      dff = this.minus(dff, del);
       return {
         diff: dff.map(function(t) {
-          return [t[0], get(c, t[0]), t[1]];
+          return [t[0], get(a, t[0]), t[1]];
         }),
-        "new": toplevel(nac),
+        "new": toplevel(nwb),
         same: toplevel(sme),
-        del: toplevel(dac)
+        del: toplevel(del)
       };
     };
 
@@ -213,8 +209,6 @@
      * 
      *   c2a:  changes between c and a
      *   c2b:  changes between c and b
-     *   a2b:  changes between a and b
-     *   b2a:  changes between b and a
      */
 
     diff.three = function(a, b, c) {
@@ -251,7 +245,7 @@
       });
       sme = this.union(this.union(ssm, snw), this.union(sdf, this.union(cha, chb)));
       dff = this.union(this.union(ca.diff, cb.diff), this.union(ca["new"], cb["new"]));
-      dff = _.differenceWith(dff, sme, keq);
+      dff = this.minus(dff, sme, keq);
       dff = toplevel(dff);
       dff = dff.map(function(t) {
         return [t[0], get(a, t[0]), get(b, t[0])];
@@ -263,8 +257,8 @@
       return {
         c2a: ca,
         c2b: cb,
-        same: sortpath(sme),
-        diff: sortpath(dff),
+        same: sme,
+        diff: dff,
         del: del
       };
     };

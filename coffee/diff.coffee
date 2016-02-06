@@ -17,8 +17,6 @@ collect  = sds.collect
 cmppath  = sds.cmppath
 get      = sds.get
 
-profile = require './profile'
-
 class diff
     
     ###
@@ -129,35 +127,23 @@ class diff
     # the diff list might contain changes at keypath.length > 1
     ###
     
-    @two: (c, a) -> 
-        # profile 'diff.two'
-        tc = collect c
-        ta = collect a
-        # profile 'sort tc'
-        tc = sortpath tc
-        # profile 'sort ta'        
-        ta = sortpath ta
-        # profile 'minus nac'
+    @two: (a, b) -> 
+        ca = collect a
+        cb = collect b
+        sortpath ca
+        sortpath cb
         pc0 = (x,y) -> x[0][0] == y[0][0]
-        nac = @minus ta, tc, pc0             # new
-        # profile 'minus dac'
-        dac = @minus tc, ta, pc0             # deleted
-        # profile 'union und'
-        und = @union nac, dac                # new or deleted
-        # profile 'intersect'
-        sme = @intersect tc, ta              # unchanged
-        # profile 'union dff'
-        dff = @union tc, ta                  # diff = all - new - del - same
-        dff = @minus dff, und
-        dff = @minus dff, sme
-        dff = @minus dff, tc
+        nwb = @minus cb, ca, pc0             # new in b
+        del = @minus ca, cb, pc0             # deleted in b
+        sme = @intersect ca, cb              # unchanged
+        dff = @minus cb,  sme                # diff = b - same - new - del
+        dff = @minus dff, nwb
+        dff = @minus dff, del
 
-        # profile ''
-
-        diff: dff.map (t) -> [t[0], get(c, t[0]), t[1]]
-        new:  toplevel nac
+        diff: dff.map (t) -> [t[0], get(a, t[0]), t[1]]
+        new:  toplevel nwb
         same: toplevel sme
-        del:  toplevel dac
+        del:  toplevel del
     
     ###
     000000000  000   000  00000000   00000000  00000000
@@ -178,45 +164,29 @@ class diff
     # 
     #   c2a:  changes between c and a
     #   c2b:  changes between c and b
-    #   a2b:  changes between a and b
-    #   b2a:  changes between b and a
     ###
                 
     @three: (a, b, c) -> 
-        # profile 'ca'
         ca = @two c, a
-        # profile 'cb'
         cb = @two c, b
         
         keq = (x,y) -> x[0][0] == y[0][0]
-        # profile 'intersect'
         ssm = @intersect ca.same, cb.same          # same in same
-        # profile 'union'
         snw = @union ca.new, cb.new                # new ...
-        # profile 'filter'
         snw = snw.filter (t) ->                    #     and
             f = 0                                  #     ...
             for t2 in snw                          #     not
                 f += 1 if t2[0][0] == t[0][0]      #     ...
             f == 1                                 #     different
-        # profile 'intersect ca.diff, cb.diff'
         sdf = @intersect ca.diff, cb.diff          # same in diff
-        # profile 'intersect cb.same, ca.diff'
         cha = @intersect cb.same, ca.diff, keq     # changed in a
-        # profile 'intersect ca.same, cb.diff'
         chb = @intersect ca.same, cb.diff, keq     # changed in b
-        # profile 'uniq cha'
         cha = _.uniqWith (cha.map (t) -> [t[0], get(a, t[0])]), _.isEqual
-        # profile 'uniq chb'
         chb = _.uniqWith (chb.map (t) -> [t[0], get(b, t[0])]), _.isEqual
-        # profile 'sdf.map'
         sdf = sdf.map (t) -> [t[0], t[2]]
-        # profile 'union ssm ...'
-        sme = @union @union(ssm, snw), @union(sdf, @union(cha, chb)) # union of sames or changed on one side only
-
-        # profile 'union dff'
+        sme = @union @union(ssm, snw), @union(sdf, @union(cha, chb))  # union of sames or changed on one side only
         dff = @union @union(ca.diff, cb.diff), @union(ca.new, cb.new) # diff = union of diff and new
-        dff = _.differenceWith dff, sme, keq                                        #        minus union of sames
+        dff = @minus dff, sme, keq                                    # minus union of sames
         dff = toplevel dff
         dff = dff.map (t) -> [t[0], get(a, t[0]), get(b, t[0])]
         dff = _.uniqWith dff, _.isEqual
@@ -224,13 +194,11 @@ class diff
         dla = @intersect ca.del, cb.same           # deleted in a and unchanged in b
         dlb = @intersect cb.del, ca.same           # deleted in b and unchanged in a
         del = @union     dla,    dlb               # deleted in b and unchanged in a
-        
-        # profile ''
-        
+                
         c2a:  ca
         c2b:  cb
-        same: sortpath sme
-        diff: sortpath dff
+        same: sme
+        diff: dff
         del:  del
                 
 module.exports = diff
