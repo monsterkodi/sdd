@@ -119,12 +119,12 @@ class diff
     # accepts two objects a and b
     # returns an object
     #
-    #   diff: [ list of [keypath, value_a, value_b] for changed values      ]
-    #   same: [ list of [keypath, value]            for unchanged values    ]
-    #   new:  [ list of [keypath, value_b]          for new values in b     ]
-    #   del:  [ list of [keypath, value_a]          for values deleted in b ]
+    #   diff: [ array of [keypath, value_a, value_b] for changed values      ]
+    #   same: [ array of [keypath, value]            for unchanged values    ]
+    #   new:  [ array of [keypath, value_b]          for new values in b     ]
+    #   del:  [ array of [keypath, value_a]          for values deleted in b ]
     #
-    # the diff list might contain changes at keypath.length > 1
+    # the diff array might contain changes at keypath.length > 1
     ###
     
     @two: (a, b) -> 
@@ -156,9 +156,9 @@ class diff
     # accepts three objects a, b and common ancestor c
     # returns an object
     #
-    #   diff: [ list of [keypath, value_a, value_b] for conflicting values in a and b                 ]
-    #   del:  [ list of [keypath, value_c]          for deleted in (a or b) and unchanged in (b or a) ]
-    #   same: [ list of [keypath, value]            for same in a and b or only new in (a or b)       ]
+    #   diff: [ array of [keypath, value_a, value_b] for conflicting values in a and b                 ]
+    #   del:  [ array of [keypath, value_c]          for deleted in (a or b) and unchanged in (b or a) ]
+    #   same: [ array of [keypath, value]            for same in a and b or only new in (a or b)       ]
     #
     #   some intermediate results are included:
     # 
