@@ -40,4 +40,4 @@ sdd.diff.three A, B, C
     - hacked together rather quickly
     - might not work as advertised
 - not completely performance optimized yet
-    - get yourself some coffee when using this on very large files with lots of changes :-)
+    - get yourself some coffee when using this on very large files :-)

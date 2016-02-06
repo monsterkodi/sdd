@@ -10,12 +10,12 @@ _       = require 'lodash'
 noon    = require 'noon'
 sds     = require 'sds'
 
-log      = console.log
 toplevel = sds.toplevel
 sortpath = sds.sortpath
 collect  = sds.collect
 cmppath  = sds.cmppath
 get      = sds.get
+log      = console.log
 
 class diff
     
@@ -29,10 +29,10 @@ class diff
     
     @minus: (a, b, eql=_.isEqual) ->
 
-        ai = 0
-        bi = 0
         r  = []
+        ai = bi = 0
         while ai < a.length
+            
             while bi < b.length and cmppath(a[ai][0], b[bi][0]) > 0
                 bi += 1
             if  bi >= b.length
@@ -54,26 +54,21 @@ class diff
      0000000   000   000  000   0000000   000   000
     ###
         
-    @union: (a, b) ->
+    @union: (a, b, eql=_.isEqual) ->
         
-        ai = 0
-        bi = 0
         r  = []
+        ai = bi = 0
         while ai < a.length
             
             while bi < b.length and cmppath(a[ai][0], b[bi][0]) > 0
                 r.push b[bi]
                 bi += 1
                 
-            if bi >= b.length 
-                break
+            if bi >= b.length then break
                 
-            if _.isEqual a[ai], b[bi]
-                r.push a[ai]
-                bi += 1
-            else
-                r.push a[ai]
+            if eql a[ai], b[bi] then bi += 1
 
+            r.push a[ai]
             ai += 1
         
         while ai < a.length
@@ -95,16 +90,18 @@ class diff
     
     @intersect: (a, b, eql=_.isEqual) ->
 
-        ai = 0
-        bi = 0
         r  = []
+        ai = bi = 0
         while ai < a.length
+            
             while bi < b.length and cmppath(a[ai][0], b[bi][0]) > 0
                 bi += 1
-            if bi >= b.length
-                break
-            if eql a[ai], b[bi]
+                
+            if bi >= b.length then break
+            
+            if eql a[ai], b[bi] 
                 r.push a[ai]
+                
             ai += 1
         r
         
@@ -128,10 +125,9 @@ class diff
     ###
     
     @two: (a, b) -> 
-        ca = collect a
-        cb = collect b
-        sortpath ca
-        sortpath cb
+        
+        ca  = sortpath collect a
+        cb  = sortpath collect b
         pc0 = (x,y) -> x[0][0] == y[0][0]
         nwb = @minus cb, ca, pc0             # new in b
         del = @minus ca, cb, pc0             # deleted in b
@@ -166,9 +162,10 @@ class diff
     #   c2b:  changes between c and b
     ###
                 
-    @three: (a, b, c) -> 
-        ca = @two c, a
-        cb = @two c, b
+    @three: (a, b, c) ->
+        
+        ca  = @two c, a
+        cb  = @two c, b
         
         keq = (x,y) -> x[0][0] == y[0][0]
         ssm = @intersect ca.same, cb.same          # same in same

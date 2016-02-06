@@ -25,18 +25,18 @@ log    = console.log
 
 args = require('karg') """
 sdd
-    files       . ? the files to diff                . **
+    files       . ? the files to diff                   . **
     a           . ? first file
     b           . ? second file
     c           . ? common ancestor file
-    diff        . ? show conflicting values          . = true
-    same        . ? show unchanged values            . = false
-    new         . ? show new values                  . = false
-    del         . ? show deleted values              . = false . - D
-    long        . ? show all values                  . = false
-    two         . ? use diff two (c is ignored)      . = false
-    pathlist    . ? show as list of path value pairs . = false
-    colors      . ? output with ansi colors          . = true  . - C
+    diff        . ? show changed/conflicting values     . = true
+    same        . ? show unchanged values               . = false
+    new         . ? show new values                     . = false
+    del         . ? show deleted values                 . = false . - D
+    long        . ? show all values                     . = false
+    two         . ? use diff two (c is ignored)         . = false
+    pathlist    . ? show as list of [path, value] pairs . = false
+    colors      . ? output with ansi colors             . = true  . - C
     output      . ? the file to write or stdout
     
 version     #{require("#{__dirname}/../package.json").version}

@@ -16,8 +16,6 @@
 
   sds = require('sds');
 
-  log = console.log;
-
   toplevel = sds.toplevel;
 
   sortpath = sds.sortpath;
@@ -27,6 +25,8 @@
   cmppath = sds.cmppath;
 
   get = sds.get;
+
+  log = console.log;
 
   diff = (function() {
     function diff() {}
@@ -45,9 +45,8 @@
       if (eql == null) {
         eql = _.isEqual;
       }
-      ai = 0;
-      bi = 0;
       r = [];
+      ai = bi = 0;
       while (ai < a.length) {
         while (bi < b.length && cmppath(a[ai][0], b[bi][0]) > 0) {
           bi += 1;
@@ -76,11 +75,13 @@
      0000000   000   000  000   0000000   000   000
      */
 
-    diff.union = function(a, b) {
+    diff.union = function(a, b, eql) {
       var ai, bi, r;
-      ai = 0;
-      bi = 0;
+      if (eql == null) {
+        eql = _.isEqual;
+      }
       r = [];
+      ai = bi = 0;
       while (ai < a.length) {
         while (bi < b.length && cmppath(a[ai][0], b[bi][0]) > 0) {
           r.push(b[bi]);
@@ -89,12 +90,10 @@
         if (bi >= b.length) {
           break;
         }
-        if (_.isEqual(a[ai], b[bi])) {
-          r.push(a[ai]);
+        if (eql(a[ai], b[bi])) {
           bi += 1;
-        } else {
-          r.push(a[ai]);
         }
+        r.push(a[ai]);
         ai += 1;
       }
       while (ai < a.length) {
@@ -122,9 +121,8 @@
       if (eql == null) {
         eql = _.isEqual;
       }
-      ai = 0;
-      bi = 0;
       r = [];
+      ai = bi = 0;
       while (ai < a.length) {
         while (bi < b.length && cmppath(a[ai][0], b[bi][0]) > 0) {
           bi += 1;
@@ -164,10 +162,8 @@
 
     diff.two = function(a, b) {
       var ca, cb, del, dff, nwb, pc0, sme;
-      ca = collect(a);
-      cb = collect(b);
-      sortpath(ca);
-      sortpath(cb);
+      ca = sortpath(collect(a));
+      cb = sortpath(collect(b));
       pc0 = function(x, y) {
         return x[0][0] === y[0][0];
       };
