@@ -139,7 +139,6 @@ describe 'diff', ->
                     [ [ 'z' ], 7                    ] ]
     
     a2b = sdd.diff.two a, b
-    b2a = sdd.diff.two b, a
                 
     it 'should diff two', -> 
         
@@ -162,8 +161,6 @@ describe 'diff', ->
         .to.eql 
             c2a:    c2a
             c2b:    c2b
-            a2b:    a2b
-            b2a:    b2a
             diff: [ [ [ 'p' ], [ 1, 2, 3 ], [ 1, 3, 2 ]         ]
                     [ [ 'r' ], null, undefined                  ]
                     [ [ 't' ], { x: 1, z: 3 }, { x: 'a', y: 2 } ]
@@ -183,8 +180,6 @@ describe 'diff', ->
         .to.eql 
             c2a:  sdd.diff.two a, a
             c2b:  sdd.diff.two a, a
-            a2b:  sdd.diff.two a, a
-            b2a:  sdd.diff.two a, a
             diff: []
             del:  []
             same: sds.sortpath sds.toplevel sds.collect a
@@ -195,8 +190,6 @@ describe 'diff', ->
         .to.eql 
             c2a:  sdd.diff.two a, a
             c2b:  sdd.diff.two a, b
-            a2b:  sdd.diff.two a, b
-            b2a:  sdd.diff.two b, a
             diff: []
             del:  a2b.del
             same: sds.sortpath sds.toplevel sds.collect(b)

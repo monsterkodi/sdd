@@ -33,6 +33,15 @@
   diff = (function() {
     function diff() {}
 
+
+    /*
+    00     00  000  000   000  000   000   0000000
+    000   000  000  0000  000  000   000  000     
+    000000000  000  000 0 000  000   000  0000000 
+    000 0 000  000  000  0000  000   000       000
+    000   000  000  000   000   0000000   0000000
+     */
+
     diff.minus = function(a, b, eql) {
       var ai, bi, r;
       if (eql == null) {
@@ -59,6 +68,15 @@
       }
       return r;
     };
+
+
+    /*
+    000   000  000   000  000   0000000   000   000
+    000   000  0000  000  000  000   000  0000  000
+    000   000  000 0 000  000  000   000  000 0 000
+    000   000  000  0000  000  000   000  000  0000
+     0000000   000   000  000   0000000   000   000
+     */
 
     diff.union = function(a, b) {
       var ai, bi, r;
@@ -91,6 +109,15 @@
       }
       return r;
     };
+
+
+    /*
+    000  000   000  000000000  00000000  00000000    0000000  00000000   0000000  000000000
+    000  0000  000     000     000       000   000  000       000       000          000   
+    000  000 0 000     000     0000000   0000000    0000000   0000000   000          000   
+    000  000  0000     000     000       000   000       000  000       000          000   
+    000  000   000     000     00000000  000   000  0000000   00000000   0000000     000
+     */
 
     diff.intersect = function(a, b, eql) {
       var ai, bi, r;
@@ -191,16 +218,14 @@
      */
 
     diff.three = function(a, b, c) {
-      var ab, ba, ca, cb, cha, chb, del, dff, dla, dlb, keq, sdf, sme, snw, ssm;
+      var ca, cb, cha, chb, del, dff, dla, dlb, keq, sdf, sme, snw, ssm;
       ca = this.two(c, a);
       cb = this.two(c, b);
-      ab = this.two(a, b);
-      ba = this.two(b, a);
       keq = function(x, y) {
         return x[0][0] === y[0][0];
       };
-      ssm = _.intersectionWith(ca.same, cb.same, _.isEqual);
-      snw = _.unionWith(ca["new"], cb["new"], _.isEqual);
+      ssm = this.intersect(ca.same, cb.same);
+      snw = this.union(ca["new"], cb["new"]);
       snw = snw.filter(function(t) {
         var f, i, len, t2;
         f = 0;
@@ -212,9 +237,9 @@
         }
         return f === 1;
       });
-      sdf = _.intersectionWith(ca.diff, cb.diff, _.isEqual);
-      cha = _.intersectionWith(cb.same, ca.diff, keq);
-      chb = _.intersectionWith(ca.same, cb.diff, keq);
+      sdf = this.intersect(ca.diff, cb.diff);
+      cha = this.intersect(cb.same, ca.diff, keq);
+      chb = this.intersect(ca.same, cb.diff, keq);
       cha = _.uniqWith(cha.map(function(t) {
         return [t[0], get(a, t[0])];
       }), _.isEqual);
@@ -224,22 +249,20 @@
       sdf = sdf.map(function(t) {
         return [t[0], t[2]];
       });
-      sme = _.unionWith(ssm, snw, sdf, cha, chb, _.isEqual);
-      dff = _.unionWith(ca.diff, cb.diff, ca["new"], cb["new"], _.isEqual);
+      sme = this.union(this.union(ssm, snw), this.union(sdf, this.union(cha, chb)));
+      dff = this.union(this.union(ca.diff, cb.diff), this.union(ca["new"], cb["new"]));
       dff = _.differenceWith(dff, sme, keq);
       dff = toplevel(dff);
       dff = dff.map(function(t) {
         return [t[0], get(a, t[0]), get(b, t[0])];
       });
       dff = _.uniqWith(dff, _.isEqual);
-      dla = _.intersectionWith(ca.del, cb.same, _.isEqual);
-      dlb = _.intersectionWith(cb.del, ca.same, _.isEqual);
-      del = _.unionWith(dla, dlb, _.isEqual);
+      dla = this.intersect(ca.del, cb.same);
+      dlb = this.intersect(cb.del, ca.same);
+      del = this.union(dla, dlb);
       return {
         c2a: ca,
         c2b: cb,
-        a2b: ab,
-        b2a: ba,
         same: sortpath(sme),
         diff: sortpath(dff),
         del: del

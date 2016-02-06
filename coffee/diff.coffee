@@ -21,6 +21,14 @@ profile = require './profile'
 
 class diff
     
+    ###
+    00     00  000  000   000  000   000   0000000
+    000   000  000  0000  000  000   000  000     
+    000000000  000  000 0 000  000   000  0000000 
+    000 0 000  000  000  0000  000   000       000
+    000   000  000  000   000   0000000   0000000 
+    ###
+    
     @minus: (a, b, eql=_.isEqual) ->
 
         ai = 0
@@ -39,6 +47,14 @@ class diff
             r.push a[ai]
             ai += 1
         r
+        
+    ###
+    000   000  000   000  000   0000000   000   000
+    000   000  0000  000  000  000   000  0000  000
+    000   000  000 0 000  000  000   000  000 0 000
+    000   000  000  0000  000  000   000  000  0000
+     0000000   000   000  000   0000000   000   000
+    ###
         
     @union: (a, b) ->
         
@@ -71,6 +87,14 @@ class diff
             bi += 1        
         r 
         
+    ###
+    000  000   000  000000000  00000000  00000000    0000000  00000000   0000000  000000000
+    000  0000  000     000     000       000   000  000       000       000          000   
+    000  000 0 000     000     0000000   0000000    0000000   0000000   000          000   
+    000  000  0000     000     000       000   000       000  000       000          000   
+    000  000   000     000     00000000  000   000  0000000   00000000   0000000     000   
+    ###
+    
     @intersect: (a, b, eql=_.isEqual) ->
 
         ai = 0
@@ -124,7 +148,6 @@ class diff
         sme = @intersect tc, ta              # unchanged
         # profile 'union dff'
         dff = @union tc, ta                  # diff = all - new - del - same
-
         dff = @minus dff, und
         dff = @minus dff, sme
         dff = @minus dff, tc
@@ -160,42 +183,52 @@ class diff
     ###
                 
     @three: (a, b, c) -> 
-        
+        # profile 'ca'
         ca = @two c, a
+        # profile 'cb'
         cb = @two c, b
-        ab = @two a, b
-        ba = @two b, a
         
         keq = (x,y) -> x[0][0] == y[0][0]
-        ssm = _.intersectionWith ca.same, cb.same, _.isEqual              # same in same
-        snw = _.unionWith ca.new, cb.new, _.isEqual                       # new ...
-        snw = snw.filter (t) ->                                           #     and
-            f = 0                                                         #     ...
-            for t2 in snw                                                 #     not
-                f += 1 if t2[0][0] == t[0][0]                             #     ...
-            f == 1                                                        #     different
-        sdf = _.intersectionWith ca.diff, cb.diff, _.isEqual              # same in diff
-        cha = _.intersectionWith cb.same, ca.diff, keq                    # changed in a
-        chb = _.intersectionWith ca.same, cb.diff, keq                    # changed in b
+        # profile 'intersect'
+        ssm = @intersect ca.same, cb.same          # same in same
+        # profile 'union'
+        snw = @union ca.new, cb.new                # new ...
+        # profile 'filter'
+        snw = snw.filter (t) ->                    #     and
+            f = 0                                  #     ...
+            for t2 in snw                          #     not
+                f += 1 if t2[0][0] == t[0][0]      #     ...
+            f == 1                                 #     different
+        # profile 'intersect ca.diff, cb.diff'
+        sdf = @intersect ca.diff, cb.diff          # same in diff
+        # profile 'intersect cb.same, ca.diff'
+        cha = @intersect cb.same, ca.diff, keq     # changed in a
+        # profile 'intersect ca.same, cb.diff'
+        chb = @intersect ca.same, cb.diff, keq     # changed in b
+        # profile 'uniq cha'
         cha = _.uniqWith (cha.map (t) -> [t[0], get(a, t[0])]), _.isEqual
+        # profile 'uniq chb'
         chb = _.uniqWith (chb.map (t) -> [t[0], get(b, t[0])]), _.isEqual
+        # profile 'sdf.map'
         sdf = sdf.map (t) -> [t[0], t[2]]
-        sme = _.unionWith ssm, snw, sdf, cha, chb, _.isEqual # union of sames or changed on one side only
+        # profile 'union ssm ...'
+        sme = @union @union(ssm, snw), @union(sdf, @union(cha, chb)) # union of sames or changed on one side only
 
-        dff = _.unionWith ca.diff, cb.diff, ca.new, cb.new, _.isEqual     # diff = union of diff and new
-        dff = _.differenceWith dff, sme, keq                              #        minus union of sames
+        # profile 'union dff'
+        dff = @union @union(ca.diff, cb.diff), @union(ca.new, cb.new) # diff = union of diff and new
+        dff = _.differenceWith dff, sme, keq                                        #        minus union of sames
         dff = toplevel dff
         dff = dff.map (t) -> [t[0], get(a, t[0]), get(b, t[0])]
         dff = _.uniqWith dff, _.isEqual
 
-        dla = _.intersectionWith ca.del, cb.same, _.isEqual               # deleted in a and unchanged in b
-        dlb = _.intersectionWith cb.del, ca.same, _.isEqual               # deleted in b and unchanged in a
-        del = _.unionWith        dla,    dlb,     _.isEqual               # deleted in b and unchanged in a
+        dla = @intersect ca.del, cb.same           # deleted in a and unchanged in b
+        dlb = @intersect cb.del, ca.same           # deleted in b and unchanged in a
+        del = @union     dla,    dlb               # deleted in b and unchanged in a
+        
+        # profile ''
         
         c2a:  ca
         c2b:  cb
-        a2b:  ab
-        b2a:  ba
         same: sortpath sme
         diff: sortpath dff
         del:  del

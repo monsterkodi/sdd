@@ -36,7 +36,7 @@ sdd
     long        . ? show all values                  . = false
     two         . ? use diff two (c is ignored)      . = false
     pathlist    . ? show as list of path value pairs . = false
-    colors      . ? output with ansi colors          . = true . - C
+    colors      . ? output with ansi colors          . = true  . - C
     output      . ? the file to write or stdout
     
 version     #{require("#{__dirname}/../package.json").version}
